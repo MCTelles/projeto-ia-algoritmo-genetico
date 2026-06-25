@@ -1,0 +1,30 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	background: #1a1a2e;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	min-height: 100vh;
+	font-family: monospace;
+	color: #ecf0f1;
+}
+
+canvas {
+	display: block;
+	border: 2px solid #2c3e50;
+	/* A imagem de fundo e o background-size foram apagados */
+	/* background-image: url('/mapa.png');
+	background-size: 800px 600px; */
+}
+
+#info {
+	margin-top: 10px;
+	font-size: 13px;
+	opacity: 0.7;
+}
