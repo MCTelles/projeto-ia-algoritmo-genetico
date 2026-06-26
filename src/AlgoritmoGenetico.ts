@@ -4,20 +4,11 @@ export interface Cerebro {
 }
 
 export class AlgoritmoGenetico {
-	// Fitness: recompensa distância percorrida; tempo vivo é bônus leve
-	calcularFitness(
-		distanciaPercorrida: number,
-		tempoVivo: number,
-		vivo = true,
-	): number {
-		let score = distanciaPercorrida;
-
-		if (!vivo) {
-			score *= 0.5;
-		}
-
-		score += tempoVivo * 0.1;
-		return score;
+	// Fitness por progresso sequencial: girar sem avançar ao próximo checkpoint não pontua.
+	calcularFitness(progressoTotal: number, framesSemProgresso = 0): number {
+		const progresso = Math.max(0, progressoTotal);
+		const penalidadeEstagnacao = Math.min(framesSemProgresso, 300) * 0.2;
+		return Math.max(0, progresso * 1000 - penalidadeEstagnacao);
 	}
 
 	// Seleção por torneio: sorteia k candidatos e devolve o melhor
@@ -38,44 +29,59 @@ export class AlgoritmoGenetico {
 		};
 	}
 
-	// Mutação com chance de alteração drástica em alguns pesos
+	// Mutação majoritariamente local, com resets raros para escapar de loops
 	mutacao(cerebro: Cerebro, taxaMutacao: number): Cerebro {
 		return {
 			pesos: cerebro.pesos.map(p => {
-				if (Math.random() < taxaMutacao) {
-					return Math.random() < 0.5
+				if (Math.random() >= taxaMutacao) return p;
+				const mutado =
+					Math.random() < 0.12
 						? Math.random() * 2 - 1
-						: p + (Math.random() * 2 - 1) * 0.5;
-				}
-				return p;
+						: p + (Math.random() * 2 - 1) * 0.3;
+				return Math.max(-3, Math.min(3, mutado));
 			}),
 		};
 	}
 
-	// Gera nova população: elitismo (top 2) + crossover + mutação
+	private criarCerebroAleatorio(tamanhoGenoma: number): Cerebro {
+		return {
+			pesos: Array.from({ length: tamanhoGenoma }, () => Math.random() * 2 - 1),
+		};
+	}
+
+	// Gera nova população: elitismo moderado + crossover + mutação + imigrantes
 	gerarProximaGeracao(
 		populacaoAntiga: Cerebro[],
 		fitnesses: number[],
 		tamanhoPopulacao: number,
-		taxaMutacao = 0.15,
+		taxaMutacao = 0.08,
 	): Cerebro[] {
 		// Rankeia por fitness (maior primeiro)
 		const ranking = fitnesses
 			.map((f, i) => ({ f, i }))
 			.sort((a, b) => b.f - a.f);
 
-		const nova: Cerebro[] = [];
+		const tamanhoGenoma = populacaoAntiga[0]?.pesos.length ?? 0;
+		const elites = Math.min(4, tamanhoPopulacao);
+		const imigrantes = Math.min(
+			Math.floor(tamanhoPopulacao * 0.1),
+			tamanhoPopulacao - elites,
+		);
 
-		// Elitismo: os 2 melhores passam intactos
-		nova.push({ pesos: [...populacaoAntiga[ranking[0].i].pesos] });
-		nova.push({ pesos: [...populacaoAntiga[ranking[1].i].pesos] });
+		const nova: Cerebro[] = ranking
+			.slice(0, elites)
+			.map(({ i }) => ({ pesos: [...populacaoAntiga[i].pesos] }));
 
 		// Preenche o restante da população
-		while (nova.length < tamanhoPopulacao) {
+		while (nova.length < tamanhoPopulacao - imigrantes) {
 			const paiA = this.selecao(populacaoAntiga, fitnesses);
 			const paiB = this.selecao(populacaoAntiga, fitnesses);
 			const filho = this.crossover(paiA, paiB);
 			nova.push(this.mutacao(filho, taxaMutacao));
+		}
+
+		while (nova.length < tamanhoPopulacao) {
+			nova.push(this.criarCerebroAleatorio(tamanhoGenoma));
 		}
 
 		return nova;

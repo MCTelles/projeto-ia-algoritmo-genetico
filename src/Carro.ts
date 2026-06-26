@@ -49,8 +49,11 @@ export class Carro {
 	// Estado do AG
 	cerebro: number[] | null = null; // genes (pesos da rede)
 	vivo = true;
-	distanciaPercorrida = 0;
 	tempoVivo = 0;
+	checkpointAtual = 0;
+	voltasCompletas = 0;
+	melhorProgressoTotal = 0;
+	framesSemProgresso = 0;
 
 	// Leituras dos 5 sensores (0 = parede tocando · 1 = alcance máximo)
 	sensores: number[] = new Array(NI).fill(1);
@@ -150,7 +153,6 @@ export class Carro {
 		this.x += Math.sin(this.angulo) * this.velocidade;
 		this.y -= Math.cos(this.angulo) * this.velocidade;
 
-		this.distanciaPercorrida += Math.abs(this.velocidade);
 		this.tempoVivo++;
 	}
 

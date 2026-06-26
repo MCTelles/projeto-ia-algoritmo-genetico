@@ -121,33 +121,31 @@ export class Pista {
 	readonly bordaInterna: Ponto[];
 
 	private readonly segmentos: Segmento[];
+	private readonly centroSuave: Ponto[];
 
 	private readonly centro: Ponto[] = [
-		{ x: 450, y: 100 },
-		{ x: 625, y: 100 },
-		{ x: 715, y: 160 },
-		{ x: 625, y: 220 },
-
-		{ x: 270, y: 220 },
-		{ x: 175, y: 280 },
-		{ x: 270, y: 340 },
-
-		{ x: 625, y: 340 },
-		{ x: 715, y: 405 },
-		{ x: 625, y: 500 },
-
-		{ x: 230, y: 500 },
-		{ x: 80, y: 390 },
-		{ x: 80, y: 210 },
-		{ x: 230, y: 100 },
+		{ x: 430, y: 115 },
+		{ x: 570, y: 115 },
+		{ x: 690, y: 170 },
+		{ x: 705, y: 275 },
+		{ x: 665, y: 355 },
+		{ x: 610, y: 415 },
+		{ x: 530, y: 500 },
+		{ x: 390, y: 480 },
+		{ x: 300, y: 415 },
+		{ x: 190, y: 445 },
+		{ x: 110, y: 345 },
+		{ x: 145, y: 245 },
+		{ x: 250, y: 190 },
+		{ x: 320, y: 135 },
 	];
 
 	constructor() {
-		const larguraPista = 76;
-		const centroSuave = suavizarFechado(this.centro, 10);
+		const larguraPista = 86;
+		this.centroSuave = suavizarFechado(this.centro, 10);
 
-		const ladoA = offsetFechado(centroSuave, larguraPista / 2);
-		const ladoB = offsetFechado(centroSuave, -larguraPista / 2);
+		const ladoA = offsetFechado(this.centroSuave, larguraPista / 2);
+		const ladoB = offsetFechado(this.centroSuave, -larguraPista / 2);
 
 		if (Math.abs(areaPoligono(ladoA)) > Math.abs(areaPoligono(ladoB))) {
 			this.bordaExterna = ladoA;
@@ -177,6 +175,14 @@ export class Pista {
 
 	getSegmentos(): Segmento[] {
 		return this.segmentos;
+	}
+
+	getCheckpoints(n: number): Ponto[] {
+		const total = this.centroSuave.length;
+		return Array.from({ length: n }, (_, i) => {
+			if (i === n - 1) return this.centro[0];
+			return this.centroSuave[Math.round(((i + 1) * total) / n) % total];
+		});
 	}
 
 	pontoNaPista(p: Ponto): boolean {
@@ -239,16 +245,16 @@ export class Pista {
 	private desenharLinhaDeLargada(ctx: CanvasRenderingContext2D): void {
 		ctx.save();
 
-		ctx.translate(450, 100);
+		ctx.translate(430, 115);
 
 		ctx.fillStyle = '#ffffff';
-		ctx.fillRect(-3, -38, 6, 76);
+		ctx.fillRect(-3, -43, 6, 86);
 
 		ctx.strokeStyle = '#111111';
 		ctx.lineWidth = 2;
 		ctx.beginPath();
-		ctx.moveTo(-12, -38);
-		ctx.lineTo(-12, 38);
+		ctx.moveTo(-12, -43);
+		ctx.lineTo(-12, 43);
 		ctx.stroke();
 
 		ctx.restore();
